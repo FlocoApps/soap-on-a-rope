@@ -1,4 +1,4 @@
-# Soap on a Rope
+# soap-on-a-rope
 A Go package designed to make your experiences with SOAP a little lesss unpleasant.
 
 ## Features

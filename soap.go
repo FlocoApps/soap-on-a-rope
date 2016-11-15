@@ -37,7 +37,7 @@ func StdEnvelopeWithNamespace(body string, namespace string) string {
    </soapenv:Body>
 </soapenv:Envelope>`
 
-	return fmt.Sprintf(t, body, namespace)
+	return fmt.Sprintf(t, namespace, body)
 }
 
 type Service interface {

@@ -6,8 +6,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 )
 
+func isNil(a interface{}) bool {
+	defer func() { recover() }()
+	return a == nil || reflect.ValueOf(a).IsNil()
+}
+
+//StdEnvelope creates a soap Envelope with given body string
 func StdEnvelope(body string) string {
 
 	t := `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
@@ -18,6 +25,19 @@ func StdEnvelope(body string) string {
 </soapenv:Envelope>`
 
 	return fmt.Sprintf(t, body)
+}
+
+//StdEnvelopeWithNamespace creates a soap Envelope with given body string and Namespace
+func StdEnvelopeWithNamespace(body string, namespace string) string {
+
+	t := `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="%s">
+   <soapenv:Header/>
+   <soapenv:Body>
+      %s
+   </soapenv:Body>
+</soapenv:Envelope>`
+
+	return fmt.Sprintf(t, namespace, body)
 }
 
 type Service interface {
@@ -33,8 +53,10 @@ type BasicAuth struct {
 }
 
 type SoapClient struct {
-	UseTLS bool
-	Auth   *BasicAuth
+	UseTLS      bool
+	Auth        *BasicAuth
+	ContentType string
+	Action      string
 }
 
 func (sc *SoapClient) SendServiceRequest(service Service) (string, error) {
@@ -61,6 +83,14 @@ func (sc *SoapClient) SendRequest(body, url string) (string, error) {
 
 	if sc.Auth != nil {
 		req.SetBasicAuth(sc.Auth.Username, sc.Auth.Password)
+	}
+
+	if !isNil(sc.ContentType) {
+		req.Header.Set("Content-Type", sc.ContentType)
+	}
+
+	if !isNil(sc.Action) {
+		req.Header.Add("Soapaction", sc.Action)
 	}
 
 	resp, err := c.Do(req)
